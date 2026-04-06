@@ -225,3 +225,23 @@ footer {
     color: whitesmoke;
     text-align: center;
 }
+
+ /* feedback page specific styles */
+.feedback-container {
+    background-color: #bcbcbc7d;
+    color: rgb(0, 0, 0);
+    text-align: center;
+    border-radius: 50px;
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 600px;
+    box-shadow: 0 4px 8px rgb(255, 255, 255);
+}
+
+.form-control {
+    background-color: #ffffff7d;
+    border-radius: 20px;
+    border: 1px solid #7573737a;
+    padding: 10px;
+    margin-bottom: 15px;
+}
