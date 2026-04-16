@@ -1,3 +1,5 @@
+// Dime Suits site functionality script
+// Includes cart behavior, checkout form formatting, and page navigation
 // Shopping Cart Functionality
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -113,6 +115,7 @@ function proceedToCheckout() {
     window.location.href = 'checkout.html';
 }
 
+// Redirect user back to home or shopping page
 function continueShopping(e) {
     e.preventDefault();
     // Navigate back to shop or home page
