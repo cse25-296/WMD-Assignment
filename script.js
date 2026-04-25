@@ -2,6 +2,9 @@
 // Includes cart behavior, checkout form formatting, and page navigation
 // Shopping Cart Functionality
 
+
+
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize cart
     initializeCart();
@@ -322,16 +325,5 @@ function processCheckout() {
 
         // Redirect to home page or order confirmation page
         window.location.href = 'index.html';
-    }
-}
-function sendFeedback() {
-    const feedbackInput = document.querySelector('#feedbackInput');
-    const feedback = feedbackInput.value.trim();
-
-    if (feedback !== '') {
-        alert('Thank you for your feedback!');
-        feedbackInput.value = '';
-    } else {
-        alert('Please enter your feedback.');
     }
 }
