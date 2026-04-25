@@ -324,12 +324,12 @@ function processCheckout() {
         window.location.href = 'index.html';
     }
 }
-function sendfeedback() {
+function sendFeedback() {
     const feedbackInput = document.querySelector('#feedbackInput');
     const feedback = feedbackInput.value.trim();
 
     if (feedback !== '') {
-        alert('Feedback submitted successfully!');
+        alert('Thank you for your feedback!');
         feedbackInput.value = '';
     } else {
         alert('Please enter your feedback.');
