@@ -1,329 +1,302 @@
-// Dime Suits site functionality script
-// Includes cart behavior, checkout form formatting, and page navigation
-// Shopping Cart Functionality
+// ============================================
+// DIME SUITS - SHOPPING CART JAVASCRIPT
+// Uses localStorage as single source of truth
+// ============================================
 
+// ============================================
+// CART STORAGE FUNCTIONS
+// ============================================
 
-
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize cart
-    initializeCart();
-});
-
-function initializeCart() {
-    // Quantity control buttons
-    const qtyBtns = document.querySelectorAll('.qty-btn');
-    qtyBtns.forEach(btn => {
-        btn.addEventListener('click', handleQuantityChange);
-    });
-
-    // Delete item buttons
-    const deleteBtns = document.querySelectorAll('.delete-btn');
-    deleteBtns.forEach(btn => {
-        btn.addEventListener('click', deleteItem);
-    });
-
-    // Clear cart button
-    const clearCartBtn = document.querySelector('.clear-cart-btn');
-    if (clearCartBtn) {
-        clearCartBtn.addEventListener('click', clearCart);
+// Get cart from localStorage
+function getCart() {
+    const cartData = localStorage.getItem('cart');
+    if (cartData) {
+        return JSON.parse(cartData);
     }
-
-    // Checkout button
-    const checkoutBtn = document.querySelector('.checkout-btn');
-    if (checkoutBtn) {
-        checkoutBtn.addEventListener('click', proceedToCheckout);
-    }
-
-    // Continue shopping button
-    const continueShoppingBtn = document.querySelector('.continue-shopping-btn');
-    if (continueShoppingBtn) {
-        continueShoppingBtn.addEventListener('click', continueShopping);
-    }
-
-    // Update cart total
-    updateCartTotal();
+    return [];
 }
 
-function handleQuantityChange(e) {
-    const btn = e.target.closest('.qty-btn');
-    const quantityControls = btn.closest('.quantity-controls');
-    const input = quantityControls.querySelector('.qty-input');
-    let currentValue = parseInt(input.value);
-
-    if (btn.textContent.trim() === '+') {
-        currentValue++;
-    } else if (btn.textContent.trim() === '-' && currentValue > 1) {
-        currentValue--;
-    }
-
-    input.value = currentValue;
-    updateCartTotal();
+// Save cart to localStorage
+function saveCart(cart) {
+    localStorage.setItem('cart', JSON.stringify(cart));
 }
 
-function deleteItem(e) {
-    const cartItem = e.target.closest('.cart-item');
-    if (cartItem) {
-        cartItem.remove();
+// ============================================
+// RENDER CART FUNCTIONS
+// ============================================
+
+// Render all cart items from localStorage
+function renderCart() {
+    const cartItemsContainer = document.getElementById('cartItems');
+    if (!cartItemsContainer) return;
+    
+    // Get cart from localStorage
+    const cart = getCart();
+    
+    // Clear current content
+    cartItemsContainer.innerHTML = '';
+    
+    // Check if cart is empty
+    if (cart.length === 0) {
+        cartItemsContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Your cart is empty</p>';
         updateCartTotal();
+        return;
+    }
+    
+    // Render each item
+    cart.forEach(function(item, index) {
+        const itemElement = createCartItemElement(item, index);
+        cartItemsContainer.appendChild(itemElement);
+    });
+    
+    // Update total price
+    updateCartTotal();
+}
+
+// Create HTML element for a cart item
+function createCartItemElement(item, index) {
+    const div = document.createElement('div');
+    div.className = 'cart-item';
+    div.setAttribute('data-index', index);
+    
+    div.innerHTML = `
+        <img src="${item.image}" alt="${item.name}" class="item-image">
+        <div class="item-details">
+            <h4>${item.name}</h4>
+            <p class="item-info">Color: ${item.color} | Size: ${item.size}</p>
+            <p class="item-price">P${item.price.toFixed(2)}</p>
+        </div>
+        <div class="item-quantity">
+            <label>Quantity:</label>
+            <div class="quantity-controls">
+                <button class="qty-btn" onclick="changeQuantity(${index}, -1)">-</button>
+                <input type="number" value="${item.quantity}" min="1" class="qty-input" readonly>
+                <button class="qty-btn" onclick="changeQuantity(${index}, 1)">+</button>
+            </div>
+        </div>
+        <button class="delete-btn" onclick="removeItem(${index})">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+            </svg>
+        </button>
+    `;
+    
+    return div;
+}
+
+// ============================================
+// CART ITEM OPERATIONS
+// ============================================
+
+// Change quantity of an item
+function changeQuantity(index, change) {
+    const cart = getCart();
+    
+    if (cart[index]) {
+        // Update quantity
+        cart[index].quantity += change;
         
-        // Check if cart is empty
-        const remainingItems = document.querySelectorAll('.cart-item').length;
-        if (remainingItems === 0) {
-            const cartItems = document.querySelector('.cart-items');
-            cartItems.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Your cart is empty</p>';
+        // Don't allow quantity less than 1
+        if (cart[index].quantity < 1) {
+            cart[index].quantity = 1;
+        }
+        
+        // Save to localStorage
+        saveCart(cart);
+        
+        // Re-render cart
+        renderCart();
+    }
+}
+
+// Remove a single item from cart
+function removeItem(index) {
+    const cart = getCart();
+    
+    // Remove item at index
+    cart.splice(index, 1);
+    
+    // Save to localStorage
+    saveCart(cart);
+    
+    // Re-render cart
+    renderCart();
+}
+
+// Clear entire cart
+function clearCart() {
+    // Ask for confirmation
+    const confirmed = confirm('Are you sure you want to clear your entire cart?');
+    
+    if (confirmed) {
+        // Clear localStorage
+        localStorage.removeItem('cart');
+        
+        // Re-render cart
+        renderCart();
+    }
+}
+
+// ============================================
+// TOTAL PRICE CALCULATION
+// ============================================
+
+// Update cart total price
+function updateCartTotal() {
+    const cart = getCart();
+    let subtotal = 0;
+    
+    // Calculate total
+    cart.forEach(function(item) {
+        subtotal += item.price * item.quantity;
+    });
+    
+    // Find and update total elements
+    const subtotalElement = document.getElementById('subtotal');
+    const totalElement = document.getElementById('total');
+    
+    if (subtotalElement) {
+        subtotalElement.textContent = 'P' + subtotal.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+    
+    if (totalElement) {
+        totalElement.textContent = 'P' + subtotal.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+}
+
+// ============================================
+// ADD TO CART (for product pages)
+// ============================================
+
+// Add product to cart
+function addToCart(productName, productPrice, productColor, productSize, productImage, quantity) {
+    const cart = getCart();
+    
+    // Check if item already exists (same name, color, size)
+    let existingIndex = -1;
+    
+    for (let i = 0; i < cart.length; i++) {
+        if (cart[i].name === productName && 
+            cart[i].color === productColor && 
+            cart[i].size === productSize) {
+            existingIndex = i;
+            break;
         }
     }
-}
-
-function clearCart(e) {
-    e.preventDefault();
-    const confirmed = confirm('Are you sure you want to clear your entire cart?');
-    if (confirmed) {
-        const cartItems = document.querySelectorAll('.cart-item');
-        cartItems.forEach(item => item.remove());
-        
-        const itemsContainer = document.querySelector('.cart-items');
-        itemsContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Your cart is empty</p>';
-        
-        updateCartTotal();
-    }
-}
-
-function updateCartTotal() {
-    const cartItems = document.querySelectorAll('.cart-item');
-    let subtotal = 0;
-
-    cartItems.forEach(item => {
-        const priceText = item.querySelector('.item-price').textContent.replace('P', '').trim();
-        const quantity = parseInt(item.querySelector('.qty-input').value);
-        const price = parseFloat(priceText);
-        
-        subtotal += price * quantity;
-    });
-
-    // Update subtotal and total
-    const subtotalElement = document.querySelector('#subtotal');
-    const totalElement = document.querySelector('#total');
     
-    if (subtotalElement && totalElement) {
-        const formattedSubtotal = 'P' + subtotal.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-        subtotalElement.textContent = formattedSubtotal;
-        totalElement.textContent = formattedSubtotal;
-    }
-}
-
-function proceedToCheckout() {
-    // Navigate to checkout page
-    window.location.href = 'checkout.html';
-}
-
-// Redirect user back to home or shopping page
-function continueShopping(e) {
-    e.preventDefault();
-    // Navigate back to shop or home page
-    window.location.href = 'index.html';
-}
-
-// Add to cart functionality (for product pages)
-function addToCart(productName, productPrice, productColor, productSize, productImage) {
-    const cartItems = document.querySelector('.cart-items');
-    
-    if (!cartItems) {
-        // If we're not on the cart page, store in localStorage
-        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+    if (existingIndex !== -1) {
+        // Item exists - increase quantity
+        cart[existingIndex].quantity += quantity;
+    } else {
+        // New item - add to cart
         cart.push({
             name: productName,
             price: productPrice,
             color: productColor,
             size: productSize,
             image: productImage,
-            quantity: 1
+            quantity: quantity
         });
-        localStorage.setItem('cart', JSON.stringify(cart));
-        alert('Item added to cart!');
-        return;
     }
-
-    // Check if item already exists in cart
-    const existingItems = document.querySelectorAll('.cart-item');
-    let itemFound = false;
-
-    existingItems.forEach(item => {
-        const itemTitle = item.querySelector('.item-details h4').textContent;
-        if (itemTitle === productName) {
-            const input = item.querySelector('.qty-input');
-            input.value = parseInt(input.value) + 1;
-            itemFound = true;
-        }
-    });
-
-    if (!itemFound) {
-        const newItem = document.createElement('div');
-        newItem.className = 'cart-item';
-        newItem.innerHTML = `
-            <img src="${productImage}" alt="${productName}" class="item-image">
-            <div class="item-details">
-                <h4>${productName}</h4>
-                <p class="item-info">color:${productColor} | size:${productSize}</p>
-                <p class="item-price">P${productPrice}</p>
-            </div>
-            <div class="item-quantity">
-                <label>Quantity:</label>
-                <div class="quantity-controls">
-                    <button class="qty-btn">-</button>
-                    <input type="number" value="1" min="1" class="qty-input">
-                    <button class="qty-btn">+</button>
-                </div>
-            </div>
-            <button class="delete-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-                </svg>
-            </button>
-        `;
-
-        cartItems.appendChild(newItem);
-
-        // Reattach event listeners to new buttons
-        const newQtyBtns = newItem.querySelectorAll('.qty-btn');
-        newQtyBtns.forEach(btn => {
-            btn.addEventListener('click', handleQuantityChange);
-        });
-
-        const deleteBtn = newItem.querySelector('.delete-btn');
-        deleteBtn.addEventListener('click', deleteItem);
-    }
-
-    updateCartTotal();
+    
+    // Save to localStorage
+    saveCart(cart);
+    
+    // Show success message
     alert('Item added to cart!');
 }
 
-// Checkout Form Functionality
-function formatCardNumber(value) {
-    // Remove any spaces
-    const cleaned = value.replace(/\s/g, '');
-    // Add spaces every 4 digits
-    return cleaned.replace(/(\d{4})/g, '$1 ').trim();
-}
+// ============================================
+// PRODUCT PAGE FUNCTIONS
+// ============================================
 
-function formatExpireDate(value) {
-    // Remove any non-digits
-    const cleaned = value.replace(/\D/g, '');
-    // Format as MM/YY
-    if (cleaned.length >= 2) {
-        return cleaned.slice(0, 2) + '/' + cleaned.slice(2, 4);
+// Get selected option from button group
+function getSelectedOption(container, defaultValue) {
+    if (!container) return defaultValue;
+    
+    const selected = container.querySelector('.selected');
+    if (selected) {
+        return selected.textContent;
     }
-    return cleaned;
+    return defaultValue;
 }
 
-// Add event listeners for card number and expire date formatting
+// Add product to cart from product page
+function addProductToCart() {
+    // Get product details from the page
+    const productName = document.querySelector('.product-selection h1')?.textContent || 
+                        document.querySelector('h1')?.textContent || 'Product';
+    const productPriceText = document.querySelector('.product-selection h4')?.textContent?.replace('P', '') || '0';
+    const productPrice = parseFloat(productPriceText);
+    
+    // Get selected size
+    const sizeContainer = document.querySelector('.size-options');
+    const selectedSize = getSelectedOption(sizeContainer, 'Standard');
+    
+    // Get selected color
+    const colorContainer = document.querySelector('.color-options');
+    const selectedColor = getSelectedOption(colorContainer, 'Black');
+    
+    // Get product image
+    const productImage = document.querySelector('.product-image')?.src || 'images/placeholder.jpg';
+    
+    // Get quantity
+    const qtyInput = document.querySelector('.product-selection input[type="number"]');
+    const quantity = qtyInput ? parseInt(qtyInput.value) || 1 : 1;
+    
+    // Add to cart
+    addToCart(productName, productPrice, selectedColor, selectedSize, productImage, quantity);
+}
+
+// ============================================
+// INITIALIZE ON PAGE LOAD
+// ============================================
+
+// Run when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    const cardNumberInput = document.querySelector('#cardNumber');
-    if (cardNumberInput) {
-        cardNumberInput.addEventListener('input', function(e) {
-            e.target.value = formatCardNumber(e.target.value);
-        });
+    // Check if we're on cart page
+    const cartItemsContainer = document.getElementById('cartItems');
+    
+    if (cartItemsContainer) {
+        // We're on cart page - render from localStorage
+        renderCart();
     }
-
-    const expireDateInput = document.querySelector('#expireDate');
-    if (expireDateInput) {
-        expireDateInput.addEventListener('input', function(e) {
-            e.target.value = formatExpireDate(e.target.value);
+    
+    // Setup size button selection
+    const sizeBtns = document.querySelectorAll('.size-btn');
+    sizeBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            // Remove selected class from all
+            document.querySelectorAll('.size-btn').forEach(function(b) {
+                b.classList.remove('selected', 'btn-dark');
+                b.classList.add('btn-outline-secondary');
+            });
+            // Add selected to clicked button
+            this.classList.remove('btn-outline-secondary');
+            this.classList.add('selected', 'btn-dark');
         });
-    }
-
-    const cvvInput = document.querySelector('#cvv');
-    if (cvvInput) {
-        cvvInput.addEventListener('input', function(e) {
-            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
+    });
+    
+    // Setup color button selection
+    const colorBtns = document.querySelectorAll('.color-btn');
+    colorBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            // Remove selected from all
+            document.querySelectorAll('.color-btn').forEach(function(b) {
+                b.classList.remove('selected');
+            });
+            // Add selected to clicked
+            this.classList.add('selected');
+        });
+    });
+    
+    // Setup add to cart button
+    const addToCartBtn = document.querySelector('.add-to-cart-btn');
+    if (addToCartBtn) {
+        addToCartBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            addProductToCart();
         });
     }
 });
-
-function validateCheckoutForm() {
-    const email = document.querySelector('#email').value.trim();
-    const firstName = document.querySelector('#firstName').value.trim();
-    const lastName = document.querySelector('#lastName').value.trim();
-    const street = document.querySelector('#street').value.trim();
-    const city = document.querySelector('#city').value.trim();
-    const province = document.querySelector('#province').value.trim();
-    const zipcode = document.querySelector('#zipcode').value.trim();
-    const country = document.querySelector('#country').value.trim();
-    const cardNumber = document.querySelector('#cardNumber').value.trim().replace(/\s/g, '');
-    const cardName = document.querySelector('#cardName').value.trim();
-    const expireDate = document.querySelector('#expireDate').value.trim();
-    const cvv = document.querySelector('#cvv').value.trim();
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email || !emailRegex.test(email)) {
-        alert('Please enter a valid email address');
-        return false;
-    }
-
-    // Shipping address validation
-    if (!firstName || !lastName || !street || !city || !province || !zipcode || !country) {
-        alert('Please fill in all shipping address fields');
-        return false;
-    }
-
-    // Card number validation (basic check for 16 digits)
-    if (!cardNumber || cardNumber.length !== 16) {
-        alert('Please enter a valid 16-digit card number');
-        return false;
-    }
-
-    // Card name validation
-    if (!cardName) {
-        alert('Please enter the name on the card');
-        return false;
-    }
-
-    // Expire date validation (MM/YY format)
-    const expireDateRegex = /^\d{2}\/\d{2}$/;
-    if (!expireDate || !expireDateRegex.test(expireDate)) {
-        alert('Please enter a valid expire date (MM/YY)');
-        return false;
-    }
-
-    // CVV validation (3-4 digits)
-    if (!cvv || cvv.length < 3 || cvv.length > 4) {
-        alert('Please enter a valid CVV (3-4 digits)');
-        return false;
-    }
-
-    return true;
-}
-
-function processCheckout() {
-    if (validateCheckoutForm()) {
-        // Get form data
-        const checkoutData = {
-            email: document.querySelector('#email').value,
-            firstName: document.querySelector('#firstName').value,
-            lastName: document.querySelector('#lastName').value,
-            street: document.querySelector('#street').value,
-            city: document.querySelector('#city').value,
-            province: document.querySelector('#province').value,
-            zipcode: document.querySelector('#zipcode').value,
-            country: document.querySelector('#country').value,
-            cardName: document.querySelector('#cardName').value,
-            cardNumberLast4: document.querySelector('#cardNumber').value.replace(/\s/g, '').slice(-4),
-            timestamp: new Date().toISOString()
-        };
-
-        // Store checkout data (in a real app, this would be sent to a server)
-        localStorage.setItem('lastCheckout', JSON.stringify(checkoutData));
-
-        // Show success message
-        alert('Order placed successfully!\n\nThank you for your purchase, ' + checkoutData.firstName + '!\n\nA confirmation email has been sent to ' + checkoutData.email);
-
-        // Clear cart from localStorage
-        localStorage.removeItem('cart');
-
-        // Redirect to home page or order confirmation page
-        window.location.href = 'index.html';
-    }
-}

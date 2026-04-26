@@ -409,10 +409,32 @@ footer {
     top: 100px;
 }
 
-.order-summary h2 {
+.order-summary h3 {
     font-size: 24px;
     font-weight: bold;
     margin-bottom: 20px;
+    color: #000;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    font-size: 14px;
+    color: #333;
+}
+
+.summary-row.total {
+    font-size: 18px;
+    font-weight: bold;
+    color: #000;
+    margin-top: 15px;
+}
+
+.summary-divider {
+    height: 1px;
+    background-color: #ddd;
+    margin: 15px 0;
 }
 
 .summary-item {
