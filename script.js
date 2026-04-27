@@ -19,6 +19,43 @@ function getCart() {
 // Save cart to localStorage
 function saveCart(cart) {
     localStorage.setItem('cart', JSON.stringify(cart));
+    updateCartCount();
+}
+
+// Update cart count badge in navbar
+function updateCartCount() {
+    const cart = getCart();
+    let totalItems = 0;
+    
+    // Calculate total quantity
+    cart.forEach(function(item) {
+        totalItems += item.quantity;
+    });
+    
+    // Find or create cart count element
+    let cartCount = document.getElementById('cartCount');
+    
+    if (!cartCount) {
+        // Create the badge element if it doesn't exist
+        const cartLink = document.querySelector('a[href="cart.html"]');
+        if (cartLink) {
+            cartCount = document.createElement('span');
+            cartCount.id = 'cartCount';
+            cartCount.className = 'position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger';
+            cartCount.style.fontSize = '0.65rem';
+            cartLink.style.position = 'relative';
+            cartLink.appendChild(cartCount);
+        }
+    }
+    
+    if (cartCount) {
+        if (totalItems > 0) {
+            cartCount.textContent = totalItems;
+            cartCount.style.display = 'inline';
+        } else {
+            cartCount.style.display = 'none';
+        }
+    }
 }
 
 // ============================================
@@ -262,6 +299,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // We're on cart page - render from localStorage
         renderCart();
     }
+    
+    // Update cart count badge on all pages
+    updateCartCount();
     
     // Setup size button selection
     const sizeBtns = document.querySelectorAll('.size-btn');
