@@ -341,15 +341,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Update cart count badge on all pages
-function updateCartCount() {
-    const cart = getCart();
-    const cartCount = document.getElementById('cartCount');
-    
-    if (cartCount) {
-        cartCount.textContent = cart.length;
-    }
-}
 
 function processCheckout() {
         // Get form values
@@ -375,3 +366,15 @@ function processCheckout() {
         // Simulate checkout processing (you can replace this with actual logic)
         alert("Thank you for your purchase, " + firstName + "! Your order has been processed.");
     } 
+
+function proceedToCheckout() {
+    // Check if cart is empty
+    const cart = getCart();
+    if (cart.length === 0) {
+        alert("Your cart is empty. Please add items to your cart before proceeding to checkout.");
+        return;
+    }
+    
+    // Redirect to checkout if cart has products
+    window.location.href = "checkout.html";
+} 
