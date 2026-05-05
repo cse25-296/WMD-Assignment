@@ -100,6 +100,13 @@
     function sendFeedback() {
         var email = document.getElementById("email").value;
         var feedback = document.getElementById("feedbackInput").value;
+        
+         // Validate that both fields are filled
+        if (!email || !feedback) {
+            alert("Please fill in all required fields (Email and Feedback)");
+            return;
+        }
+
 
         alert("Thank you for your feedback.If you have any questions please feel free to contact us at cse25-296@thuto.bac.ac.bw");
     }
