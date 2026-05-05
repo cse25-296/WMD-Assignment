@@ -340,3 +340,38 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Update cart count badge on all pages
+function updateCartCount() {
+    const cart = getCart();
+    const cartCount = document.getElementById('cartCount');
+    
+    if (cartCount) {
+        cartCount.textContent = cart.length;
+    }
+}
+
+function processCheckout() {
+        // Get form values
+        var email = document.getElementById("email").value;
+        var firstName = document.getElementById("firstName").value;
+        var lastName = document.getElementById("lastName").value;
+        var street = document.getElementById("street").value;
+        var city = document.getElementById("city").value;
+        var province = document.getElementById("province").value;
+        var zipcode = document.getElementById("zipcode").value;
+        var country = document.getElementById("country").value;
+        var cardNumber = document.getElementById("cardNumber").value;
+        var cardName = document.getElementById("cardName").value;
+        var expireDate = document.getElementById("expireDate").value;
+        var cvv = document.getElementById("cvv").value;
+
+        // Validate that all fields are filled
+        if (!email || !firstName || !lastName || !street || !city || !province || !zipcode || !country || !cardNumber || !cardName || !expireDate || !cvv) {
+            alert("Please fill in all required fields");
+            return;
+        }
+
+        // Simulate checkout processing (you can replace this with actual logic)
+        alert("Thank you for your purchase, " + firstName + "! Your order has been processed.");
+    } 
